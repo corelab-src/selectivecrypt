@@ -1,0 +1,12 @@
+{
+  "endpoint": "a184gkv9btk000-ats.iot.ap-northeast-1.amazonaws.com",
+  "rootCA": "playground/client_certs/rootCA.crt",
+  "cert": "playground/client_certs/cert.pem",
+  "key": "playground/client_certs/privkey.pem",
+  "port": "8883",
+  "websocket": "False",
+  "clientId": "CryptEdge-pi",
+  "pub_topic": "selcrypt/in",
+  "sub_topic": "selcrypt/out",
+  "mode": "both"
+}

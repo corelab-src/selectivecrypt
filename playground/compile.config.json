@@ -1,0 +1,26 @@
+{
+  "target_funcs": [
+    "cryptonets",
+    "linear_regression",
+    "logistic_regression",
+    "perceptron",
+    "mlp"
+  ],
+  "exceptional_uses": [
+    "upload_obj",
+    "upload_file"
+  ],
+  "plaintext_encode": [
+    "p_conv_vec",
+    "p_pool_vec",
+    "p_fc_vec"
+  ],
+  "data_in": [
+    "download_obj"
+  ],
+  "data_out": [
+    "upload_obj",
+    "upload_file"
+  ],
+  "mode": "aws"
+}
