@@ -12,7 +12,7 @@ build/*
 !build/.gitkeep
 tmp/
 playground/opt/python/*
-
+!playground/opt/python/.gitkeep
 *.s
 *.o
 *.a
@@ -30,6 +30,7 @@ playground/opt/python/*
 packaged.yaml
 .aws-sam/
 __pycache__
+*.pyc
 
 *.in
 *.ctx

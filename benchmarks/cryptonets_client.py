@@ -48,7 +48,7 @@ def cryptonets_callback(client, userdata, message):
   arrival_time = time.time()
   total_diff = arrival_time - total_start
   print("[Client] Received a new message (from awsiot): ")
-  print(message.payload.decode())
+  print(f"{bcolors.BOLD}{bcolors.OKGREEN}" + message.payload.decode() + f"{bcolors.ENDC}")
   print("[Client] from topic: ")
   print(message.topic)
   tx_diff = arrival_time - tx_start
@@ -160,7 +160,7 @@ def cryptonets_transmit_inputs_no_offload(destdir):
 def cryptonets_inputs_offloaded(target_data, mode, he):
   destdir = os.path.dirname(target_data)
   print("[Proxy] Unzipping {}...".format(target_data))
-  os.system("unzip -q {} -d {}".format(target_data, destdir))
+  os.system("unzip -o -q {} -d {}".format(target_data, destdir))
   x1 = 15
   print("Generating pseudo-weights for Conv 1 ...\n")
   p_conv_len = 5*25
