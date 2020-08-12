@@ -101,8 +101,7 @@ class Transformer(ast.NodeTransformer):
               arg='poly_modulus',
               value=ast.Subscript(
                 value=ast.Name('parms_in', ast.Load(), None, None),
-                slice=ast.Index(
-                  value=ast.Constant('poly_modulus', None)),
+                slice=ast.Constant('poly_modulus', None),
                 ctx=ast.Load()
               )
             ),
@@ -110,8 +109,7 @@ class Transformer(ast.NodeTransformer):
               arg='coeff_modulus',
               value=ast.Subscript(
                 value=ast.Name('parms_in', ast.Load(), None, None),
-                slice=ast.Index(
-                  value=ast.Constant('coeff_modulus', None)),
+                slice=ast.Constant('coeff_modulus', None),
                 ctx=ast.Load()
               )
             ),
@@ -119,8 +117,7 @@ class Transformer(ast.NodeTransformer):
               arg='plain_modulus',
               value=ast.Subscript(
                 value=ast.Name('parms_in', ast.Load(), None, None),
-                slice=ast.Index(
-                  value=ast.Constant('plain_modulus', None)),
+                slice=ast.Constant('plain_modulus', None),
                 ctx=ast.Load()
               )
             ),
