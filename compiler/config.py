@@ -7,7 +7,7 @@ class Config():
         config = json.load(f)
         self.target_funcs = config['target_funcs']
         self.exceptional_uses = config['exceptional_uses']
-        self.plaintext_encode = config['plaintext_encode']
+        self.ciphertext_encode = config['ciphertext_encode']
         self.data_in = config['data_in']
         self.data_out = config['data_out']
         self.mode = config['mode']
@@ -19,8 +19,8 @@ class Config():
     print(self.target_funcs)
     print("CONFIG: Uses witout processing")
     print(self.exceptional_uses)
-    print("CONFIG: Plaintext Encode")
-    print(self.plaintext_encode)
+    print("CONFIG: Ciphertext Encode")
+    print(self.ciphertext_encode)
     print("CONFIG: receive function name")
     print(self.data_in)
     print("CONFIG: send function name")

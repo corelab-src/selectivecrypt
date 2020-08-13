@@ -14,12 +14,12 @@ COMPILE=$(BIN)/compile.py
 
 all: $(CRYPTONETS) $(LINEAR_REGRESSION) $(LOGISTIC_REGRESSION) $(PERCEPTRON) $(MLP)
 
-local-all: $(CRYPTONETS)-local $(LINEAR_REGRESSION)-local $(LOGISTIC_REGRESSION)-local $(PERCEPTRON)-local $(MLP)-local
+local_all: $(CRYPTONETS)_local $(LINEAR_REGRESSION)_local $(LOGISTIC_REGRESSION)_local $(PERCEPTRON)_local $(MLP)_local
 
 cryptonets: $(SRC)/$(CRYPTONETS).py
 	python $(COMPILE) $^ $(BUILD)
 
-cryptonets-local: $(SRC)/$(CRYPTONETS)_local.py
+cryptonets_local: $(SRC)/$(CRYPTONETS)_local.py
 	python $(COMPILE) $^ $(PLAYGROUND)
 
 #cryptonets-test: $(BUILD)/$(CRYPTONETS)_transformed.py
@@ -57,7 +57,7 @@ zip_perceptron: preceptron prepare_zipping
 zip_mlp: mlp prepare_zipping
 	cd build && zip -r mlp.zip . && cd -
 
-zip-all: prepare_zipping cryptonets linear_regression logistic_regression perceptron mlp
+zip_all: prepare_zipping cryptonets linear_regression logistic_regression perceptron mlp
 	cd build && zip -r all_transformed.zip . && cd -
 
 clean:

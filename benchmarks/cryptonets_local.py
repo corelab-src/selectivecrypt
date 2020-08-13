@@ -18,23 +18,23 @@ def cryptonets():
   c_conv_vec = []
   
   for i in range(0, p_conv_len):
-    p = s3.download_obj("data", "p_conv_vec." + str(i) + ".in")
+    p = s3.download_obj('data', 'p_conv_vec.{}.in'.format(i), '/tmp/p_conv_vec.{}.in'.format(i))
     p_conv_vec.append(p)
   for i in range(0, c_conv_len):
-    c = s3.download_obj("data", "c_conv_vec." + str(i) + ".in")
+    c = s3.download_obj('data', 'c_conv_vec.{}.in'.format(i), '/tmp/c_conv_vec.{}.in'.format(i))
     c_conv_vec.append(c)
 
   p_pool_len = 100*5*x1
   p_pool_vec = []
 
   for i in range(0, p_pool_len):
-    po = s3.download_obj("data", "p_pool_vec." + str(i) + ".in")
+    po = s3.download_obj('data', 'p_pool_vec.{}.in'.format(i), '/tmp/p_pool_vec.{}.in'.format(i))
     p_pool_vec.append(po)
   
   p_fc_len = 10*100
   p_fc_vec = []
   for i in range(0, p_fc_len) :
-    f = s3.download_obj("data", "p_ffc_vec." + str(i) + ".in")
+    f = s3.download_obj('data', 'p_fc_vec.{}.in'.format(i), '/tmp/p_fc_vec.{}.in'.format(i))
     p_fc_vec.append(f)
 
   video = s3.download_obj("data", "video.in")

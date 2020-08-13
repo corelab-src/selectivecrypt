@@ -218,9 +218,7 @@ class Transformer(ast.NodeTransformer):
           if d == node.targets[0].id and \
              isinstance(u.node, ast.Call) and \
              isinstance(u.node.func, ast.Attribute):
-            if u.node.func.value.id in self.cfg.plaintext_encode:
-  #            print("in")
-  #            print(self.cfg.plaintext_encode)
+            if u.node.func.value.id not in self.cfg.ciphertext_encode:
               download_ptxt = ast.Expr(
                 ast.Call(
                   func=ast.Attribute(
@@ -250,7 +248,6 @@ class Transformer(ast.NodeTransformer):
                 generated.append(download_ptxt)
               generated.append(assign)
             else:
-  #            print("not plain")
               download_ctxt = ast.Expr(
                 ast.Call(
                   func=ast.Attribute(

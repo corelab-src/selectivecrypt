@@ -10,10 +10,8 @@
     "upload_obj",
     "upload_file"
   ],
-  "plaintext_encode": [
-    "p_conv_vec",
-    "p_pool_vec",
-    "p_fc_vec"
+  "ciphertext_encode": [
+    "c_conv_vec"
   ],
   "data_in": [
     "download_obj"

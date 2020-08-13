@@ -114,6 +114,9 @@ def custom_callback(client, userdata, message):
 
 def benchmark_wrapper(benchmark, mode, total_start):
   os.system("find data/ ! -name 'README.md' -type f -exec rm {} +")
+  
+  if mode == "local":
+    return
 
   if not isProxyOffloadMode(mode):
     # 0. connect to aws
