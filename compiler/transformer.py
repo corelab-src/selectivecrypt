@@ -42,7 +42,7 @@ class Transformer(ast.NodeTransformer):
               attr='download_file',
               ctx=ast.Load()),
             args=[
-              ast.Constant('selcrypt', None),
+              ast.Constant(self.cfg.bucket, None),
               ast.Constant('seal.parms', None),
               ast.Constant('/tmp/seal.parms', None)
             ],
@@ -55,7 +55,7 @@ class Transformer(ast.NodeTransformer):
               attr='download_file',
               ctx=ast.Load()),
             args=[
-              ast.Constant('selcrypt', None),
+              ast.Constant(self.cfg.bucket, None),
               ast.Constant('pub.key', None),
               ast.Constant('/tmp/pub.key', None)
             ],
@@ -68,7 +68,7 @@ class Transformer(ast.NodeTransformer):
               attr='download_file',
               ctx=ast.Load()),
             args=[
-              ast.Constant('selcrypt', None),
+              ast.Constant(self.cfg.bucket, None),
               ast.Constant('relin.key', None),
               ast.Constant('/tmp/relin.key', None)
             ],

@@ -10,6 +10,7 @@ class Config():
         self.ciphertext_encode = config['ciphertext_encode']
         self.data_in = config['data_in']
         self.data_out = config['data_out']
+        self.bucket = config['bucket']
         self.mode = config['mode']
     except IOError:
       print("Error: locate configuration file.")
@@ -25,5 +26,7 @@ class Config():
     print(self.data_in)
     print("CONFIG: send function name")
     print(self.data_out)
+    print("CONFIG: s3 bucket")
+    print(self.bucket)
     print("CONFIG: compile mode")
     print(self.mode)

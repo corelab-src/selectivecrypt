@@ -25,7 +25,7 @@ class bcolors:
 ENC_MODE="enc" # "enc" or "noenc"
 
 # global vars.
-s3 = S3('selcrypt')
+s3 = S3(isClient=True, isLocal=False)
 global tx_start
 global total_start
 tx_start = 0
@@ -318,3 +318,48 @@ def cryptonets_offload(mode, client_for_proxy, _total_start):
       time.sleep(1)
     except KeyboardInterrupt:
       sys.exit()
+
+def cryptonets_local(mode, _total_start):
+  global total_start
+  total_start = _total_start
+  
+  start = time.time()
+  # he init
+  poly_modulus = 1 << 12
+  coeff_modulus = 1 << 13
+  plain_modulus = 1099511922689
+  #plain_modulus = 786433
+  he = ph(poly_modulus, coeff_modulus, plain_modulus)
+  he.saveParmsAndKeys("data/"); # data/seal.parms, data/pub.key
+  diff = time.time() - start
+  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] HE Init: done in {diff*1000} ms{bcolors.ENDC}")
+
+  cf = cryptfile.CryptFile()
+  cf.set_key_with_psk('MYPASSWORDFORFILECRYPT')
+
+  destdir = 'data'
+
+  if mode[:2] == 'he':
+    enc_start = time.time()
+    cf.encrypt_file_with_he(destdir, 'playground/input_data/video_small.mp4', he)
+    #cf.encrypt_file_with_he(destdir, 'playground/input_data/image_tiny.png', he)
+    print("[Client-Local] Zipping encrypted video_small.mp4 as a name video_small.mp4")
+    os.system('cd {} && zip -q -r video_small.mp4 video_small.mp4.*.enc && rm video_small.mp4.*.enc && cd -'.format(destdir))
+  elif mode[:2] == 'se':
+    aes_start = time.time()
+    cf.encrypt_file(destdir, 'playground/input_data/video_small.mp4')
+    aes_diff = time.time() - aes_start
+    print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client-Local] AES Encrypt: done in {aes_diff*1000} ms{bcolors.ENDC}")
+    enc_start = time.time()
+  else:
+    print("[Client-Local] Wrong mode")
+    sys.exit()
+  
+  cryptonets_inputs(destdir, "enc", he)
+  
+  enc_diff = time.time() - enc_start
+  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client-Local] HE Encrypt and Save: done in {enc_diff*1000} ms{bcolors.ENDC}")
+
+  print(f"{bcolors.BOLD}{bcolors.OKGREEN}[Client-local] Invoke lambda ...{bcolors.ENDC}")
+  os.system('playground/invoke.sh')
+  

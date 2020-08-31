@@ -54,16 +54,16 @@ Create and activate conda environment.
 conda create -n <name> python=3.7
 source activate <name>
 ```
+Install required python packages.
+``` bash
+cd $SELECTIVECRYPT
+pip install -t requiremetns.txt
+```
 Install PyHeal manually.
 ``` bash
 git clone --recursive https://github.com/Accenture/pyheal.git
 cd pyheal
 pip install .
-```
-Install required python packages.
-``` bash
-cd $SELECTIVECRYPT
-pip install -t requiremetns.txt
 ```
 For simulating AWS lambda execution locally, we need a lambda docker image.
 Pull lambda docker image.
@@ -80,14 +80,14 @@ cd /path/to/pyheal/
 pip install . -t $SELECTIVECRYPT/playground/opt/python
 ```
 
-#### Compile
+#### Compile (local test)
 
 ``` bash
-make cryptonets-local
+make cryptonets_local
 ```
 This will produce cryptonets_local_transformed.py in $SELECTIVECRYPT/playground.
 
-#### Run
+#### Run (local test)
 
 - Server-side
 ``` bash
@@ -129,11 +129,11 @@ key, run 'aws configure' on client (and proxy) and set them accordingly.
 3. Choose 'Python 3.7' as runtime
 4. **IMPORTANT** Give proper 'execution role' for your a new lambda.
   * Dropdown 'Choose or create an excution role'
-  * Select 'Create a new role with bash Lambda permissions'
-5. After creation, click 'Edit basic settings' and set 'memory limit' and
+  * Select 'Create a new role with basic Lambda permissions'
+5. **IMPORTANT** After creation, click 'Edit basic settings' and set 'memory limit' and
    'timeout' to the maximum. (3008 MB and 15 min, respectively)
 
-Read
+For more detailed information, read
 https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html
 
 ##### IoT
@@ -147,8 +147,9 @@ Read
 To use this SDK, we need an IoT Thing (AWS IoT -> Manage -> Things). 
 After creating a thing, attach
 IoT policies and download certificate, public key, private key and
-root certificate of Amazon (rootCA.crt) to your client device.
-In my case, my policy attached to Raspberry Pi is as follows.
+root certificate of Amazon (rootCA.crt) to your actual client device.
+In my case, my policy attached to Raspberry Pi is as follows. (allow all
+IoT-related actions)
 <pre><code>{
   "Version": "2012-10-17",
   "Statement": [
@@ -213,9 +214,22 @@ select 'Upload a .zip file')
 
 ## GLIBC 2.29 not found
 
-build pyheal on lower version of linux.
+Build pyheal on lower version of linux. (e.g. Ubuntu 18.04 LTS)
 
-## When building pyheal, virtual memory exhausted
+``` bash
+cd $SELECTIVECRYPT/bin
+mkdir tmp
+docker build -f Dockerfile.buildpyheal -t buildpyheal .
+docker run -it -v $(pwd)/tmp:/root/out buildpyheal /bin/bash
+```
+
+You will see the files in $SELECTIVECRYPT/bin/tmp/.
+Copy all the generated files to $SELECTIVECRYPT/playground/opt/python
+``` bash
+cp -r $SELECTIVECRYPT/bin/tmp/* $SELECTIVECRYPT/playground/opt/python/
+```
+
+## When building pyheal, encounter 'virtual memory exhausted..' error
 
 Your device does not have enough memory to build.
 See https://stackoverflow.com/questions/29466663/memory-error-while-using-pip-install-matplotlib
@@ -231,5 +245,3 @@ mkswap /swapfile
 # turn swap on
 swapon /swapfile
 ```
-
-## After building pyheal, import ... encounter '

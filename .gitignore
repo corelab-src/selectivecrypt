@@ -12,6 +12,7 @@ build/*
 !build/.gitkeep
 tmp/
 playground/opt/python/*
+playground/*_transformed.py
 !playground/opt/python/.gitkeep
 *.s
 *.o
@@ -27,6 +28,8 @@ playground/opt/python/*
 *.swp
 *.bak
 *.swo
+*.pem
+*.crt
 packaged.yaml
 .aws-sam/
 __pycache__
@@ -37,4 +40,4 @@ __pycache__
 *.key
 *.out
 output.json
-lambda_transformed.py
+*_transformed.py

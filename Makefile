@@ -3,6 +3,7 @@ SRC=$(ROOT)/benchmarks
 BUILD=$(ROOT)/build
 BIN=$(ROOT)/bin
 PLAYGROUND=$(ROOT)/playground
+UTILS=$(ROOT)/utils
 
 CRYPTONETS=cryptonets
 LINEAR_REGRESSION=linear_regression
@@ -21,6 +22,7 @@ cryptonets: $(SRC)/$(CRYPTONETS).py
 
 cryptonets_local: $(SRC)/$(CRYPTONETS)_local.py
 	python $(COMPILE) $^ $(PLAYGROUND)
+	cp -r $(UTILS) $(PLAYGROUND)
 
 #cryptonets-test: $(BUILD)/$(CRYPTONETS)_transformed.py
 
@@ -61,4 +63,4 @@ zip_all: prepare_zipping cryptonets linear_regression logistic_regression percep
 	cd build && zip -r all_transformed.zip . && cd -
 
 clean:
-	rm -rf build/*.py
+	rm -rf build/*.zip build/*_transformed.py playground/*_transformed.py playground/utils/

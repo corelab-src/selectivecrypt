@@ -30,6 +30,9 @@ Macro Eval Mode:
 * se-wp: SE w/ weak proxy
 * se-pp: SE w/ powerful proxy
 
+* he-local: HE locally
+* se-local: SE locally
+
 Micro Eval Mode:
 * d: on device 
 * p: on proxy
@@ -104,18 +107,14 @@ def isProxyOffloadMode(mode):
     return False
   return True
 
-# This callback prints performance results from the lambda
-def custom_callback(client, userdata, message):
-  print("[Client] Received a new message: ")
-  print(message.payload)
-  print("[Client] from topic: ")
-  print(message.topic)
-  print("--------------\n")
-
 def benchmark_wrapper(benchmark, mode, total_start):
   os.system("find data/ ! -name 'README.md' -type f -exec rm {} +")
   
-  if mode == "local":
+  if mode[3:] == "local":
+    if benchmark == 'cryptonets':
+      cryptonets_local(mode, total_start)
+    elif benchmark == 'linear_regression':
+      return
     return
 
   if not isProxyOffloadMode(mode):
@@ -126,7 +125,6 @@ def benchmark_wrapper(benchmark, mode, total_start):
     # 4. publish a topic (invoke lambda)
     # 5. wait returns from lambda
     client_for_awsiot = awsiot.AWSIoT('playground/awsiot.client.config.json')
-    #client_for_awsiot.connect_and_subscribe(custom_callback)
     if benchmark == 'cryptonets':
       cryptonets_no_offload(mode, client_for_awsiot, total_start)
     elif benchmark == 'linear_regression':

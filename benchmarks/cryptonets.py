@@ -7,7 +7,8 @@ import zipfile
 from concurrent import futures
 from io import BytesIO
 
-s3 = S3('selcrypt')
+BUCKET='selcrypt'
+s3 = S3(isClient=False, isLocal=False)
 
 def add_many(dots):
   dotsum = dots[0]
@@ -25,26 +26,26 @@ def cryptonets():
   c_conv_vec = []
    
   for i in range(0, p_conv_len):
-    p = s3.download_obj('selcrypt', 'p_conv_vec.{}.in'.format(i), '/tmp/p_conv_vec.{}.in'.format(i))
+    p = s3.download_obj(BUCKET, 'p_conv_vec.{}.in'.format(i), '/tmp/p_conv_vec.{}.in'.format(i))
     p_conv_vec.append(p)
   for i in range(0, c_conv_len):
-    c = s3.download_obj('selcrypt', 'c_conv_vec.{}.in'.format(i), '/tmp/c_conv_vec.{}.in'.format(i))
+    c = s3.download_obj(BUCKET, 'c_conv_vec.{}.in'.format(i), '/tmp/c_conv_vec.{}.in'.format(i))
     c_conv_vec.append(c)
 
   p_pool_len = 100*5*x1
   p_pool_vec = []
 
   for i in range(0, p_pool_len):
-    po = s3.download_obj('selcrypt', 'p_pool_vec.{}.in'.format(i), '/tmp/p_pool_vec.{}.in'.format(i))
+    po = s3.download_obj(BUCKET, 'p_pool_vec.{}.in'.format(i), '/tmp/p_pool_vec.{}.in'.format(i))
     p_pool_vec.append(po)
   
   p_fc_len = 10*100
   p_fc_vec = []
   for i in range(0, p_fc_len) :
-    f = s3.download_obj('selcrypt', 'p_fc_vec.{}.in'.format(i), '/tmp/p_fc_vec.{}.in'.format(i))
+    f = s3.download_obj(BUCKET, 'p_fc_vec.{}.in'.format(i), '/tmp/p_fc_vec.{}.in'.format(i))
     p_fc_vec.append(f)
 
-  video = s3.download_obj('selcrypt', 'video_small.mp4', '/tmp/video_small.mp4')
+  video = s3.download_obj(BUCKET, 'video_small.mp4', '/tmp/video_small.mp4')
 
   print("...Downloading inputs and weights is done\n")
   print("Calculating Conv 1 ...\n")
@@ -119,20 +120,20 @@ def cryptonets():
       fc_out.append(add_many(dots))
 
   print("...FC layer is done\n")
-  s3.upload_obj(video, '/tmp/video_small.mp4', 'selcrypt', 'video_small.mp4')
+  s3.upload_obj(video, '/tmp/video_small.mp4', BUCKET, 'video_small.mp4')
   return fc_out
 
 def lambda_handler(event, context):
   start = time.time()
-  s3.extract_and_upload('selcrypt', 'all_inputs.zip')
+  s3.extract_and_upload(BUCKET, 'all_inputs.zip')
   r = cryptonets()
   res_list = []
   for i, o in enumerate(r):
     o.save('/tmp/res.{}.out'.format(i))
     res_list.append('/tmp/res.{}.out'.format(i))
-    #s3.upload_obj(o, '/tmp/res.{}.out'.format(i), 'selcrypt',
+    #s3.upload_obj(o, '/tmp/res.{}.out'.format(i), BUCKET,
     #  'res.{}.out'.format(i))
-  s3.compress_and_upload('selcrypt', res_list, 'all_outputs.zip')
+  s3.compress_and_upload(BUCKET, res_list, 'all_outputs.zip')
   print('cryptonets done')
   diff = time.time() - start
   client = boto3.client('iot-data', region_name='ap-northeast-1')

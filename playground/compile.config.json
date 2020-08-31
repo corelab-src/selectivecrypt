@@ -20,5 +20,6 @@
     "upload_obj",
     "upload_file"
   ],
-  "mode": "aws"
+  "bucket": "data",
+  "mode": "local"
 }

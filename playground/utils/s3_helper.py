@@ -1,6 +1,6 @@
 from pyheal import wrapper
 from pyheal import ciphertext_op
-import os, sys
+import os
 import numpy as np
 try:
   import boto3
@@ -10,9 +10,6 @@ try:
   from io import BytesIO
 except ImportError:
   pass
-sys.path.append(os.path.dirname(sys.path[0]))
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class S3():
   def __init__(self, isClient=False, isLocal=False):
@@ -24,7 +21,7 @@ class S3():
   def download_file(self, bucket, key, filename):
     print("s3: downloading a file from " + bucket + "/" + key + " as " + filename)
     if self.isLocal:
-      os.system("cp " + os.path.join(ROOT_DIR,bucket) + "/" + key + " " + filename)
+      os.system("cp " + bucket + "/" + key + " " + filename)
     else:
       if not self.isClient:
         self.s3.download_file(bucket, key, filename)
@@ -35,7 +32,7 @@ class S3():
     print("s3: uploading {} as {}/{}".format(filename,bucket,key))
     if self.isLocal:
       os.system("mkdir -p " + bucket)
-      os.system("cp " + os.path.join(ROOT_DIR,filename) + " " + bucket + "/")
+      os.system("cp " + filename + " " + bucket + "/")
     else:
       if not self.isClient:
         self.s3.upload_file(filename, self.bucket, key)
