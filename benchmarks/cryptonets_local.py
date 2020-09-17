@@ -39,7 +39,7 @@ def cryptonets():
     f = s3.download_obj(LOCAL_BUCKET, 'p_fc_vec.{}.in'.format(i), '/tmp/p_fc_vec.{}.in'.format(i))
     p_fc_vec.append(f)
 
-  video = s3.download_obj("data", "video.in")
+  video = s3.download_obj(LOCAL_BUCKET, "video_small.mp4", "/tmp/video_small.mp4")
 
   print("...Downloading inputs and weights is done\n")
   print("Calculating Conv 1 ...\n")
@@ -59,7 +59,6 @@ def cryptonets():
   del p_conv_vec[:]
   del c_conv_vec[:]
 
-  print(conv_out)
   print("...Conv 1 is done\n")
   print("Calculating activation layer 1 (square)...\n")
 
@@ -69,7 +68,6 @@ def cryptonets():
     act_out.append(c_tpm)
 
   del conv_out[:]
-  print(act_out)
 
   print("...Activation layer 1 is done\n")
   print("Calculating pool + linear...\n")
@@ -89,8 +87,6 @@ def cryptonets():
   del act_out[:]
   del p_pool_vec[:]
 
-  print(pool_out)
-
   print("...Pool+Linear layer  is done\n")
   print("Calculating activation layer 2 (square)...\n")
 
@@ -101,7 +97,6 @@ def cryptonets():
 
   del pool_out[:]
 
-  print(act_out_2)
   print("...Activation layer 2 is done\n")
   print("Calculating FC layer...\n")
 
@@ -118,15 +113,15 @@ def cryptonets():
       fc_out.append(add_many(dots))
 
   print("...FC layer is done\n")
-  s3.upload_obj(video, LOCAL_BUCKET, 'video.cpy.in')
-  print(fc_out)
+  s3.upload_obj(video, '/tmp/video_small.mp4', LOCAL_BUCKET, 'video_small.mp4')
   return fc_out
 
 def lambda_handler(event, context):
   r = cryptonets()
 #  s3.upload_obj(r, "data", "res.out")
   for i, o in enumerate(r):
-    s3.upload_obj(o, "data", "res." + str(i) + ".out") 
+    o.save('/tmp/res.{}.out'.format(i))
+    s3.upload_obj(o, "/tmp/res.{}.out".format(i), LOCAL_BUCKET, "res.{}.out".format(i)) 
   print("cryptonets done")
   return {'statusCode': 200, 'body':[ ("res." + str(i) + ".out") for i in range(len(r))] }
 #  return event['body']

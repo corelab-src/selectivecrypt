@@ -12,6 +12,7 @@ class Analyzer(ast.NodeVisitor):
     # so these defs can be encrypted with AES.
     self.filtered_defs = set() 
     self.target_def_use = {} # transform target defs and corresponding uses. 
+    self.he_mult_ops = set()
     self.cfg = cfg # configuration
     self.he_aes = {} 
     self.analysis_file = open("data/analysis.json", "w")
@@ -46,6 +47,17 @@ class Analyzer(ast.NodeVisitor):
             ud = self.chains.chains[node_]
             for user in ud.users():
               self.target_def_use[node.targets[0].id] = user
+    self.generic_visit(node)
+    return node
+
+  def visit_BinOp(self, node):
+    #for e in self.chains.chains:
+    #  print(e)
+    if isinstance(node.op, ast.Mult) or \
+       isinstance(node.op, ast.Div) or \
+       isinstance(node.op, ast.Pow):
+      #print(astor.dump_tree(node))
+      self.he_mult_ops.add(node)
     self.generic_visit(node)
     return node
 

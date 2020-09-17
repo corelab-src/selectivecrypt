@@ -1,6 +1,6 @@
 from pyheal import wrapper
 from pyheal import ciphertext_op
-import os
+import os, sys
 import numpy as np
 try:
   import boto3
@@ -10,6 +10,9 @@ try:
   from io import BytesIO
 except ImportError:
   pass
+sys.path.append(os.path.dirname(sys.path[0]))
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class S3():
   def __init__(self, isClient=False, isLocal=False):

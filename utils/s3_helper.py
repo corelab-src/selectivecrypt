@@ -24,7 +24,7 @@ class S3():
   def download_file(self, bucket, key, filename):
     print("s3: downloading a file from " + bucket + "/" + key + " as " + filename)
     if self.isLocal:
-      os.system("cp " + os.path.join(ROOT_DIR,bucket) + "/" + key + " " + filename)
+      os.system("cp " + bucket + "/" + key + " " + filename)
     else:
       if not self.isClient:
         self.s3.download_file(bucket, key, filename)
@@ -35,7 +35,7 @@ class S3():
     print("s3: uploading {} as {}/{}".format(filename,bucket,key))
     if self.isLocal:
       os.system("mkdir -p " + bucket)
-      os.system("cp " + os.path.join(ROOT_DIR,filename) + " " + bucket + "/")
+      os.system("cp " + filename + " " + bucket + "/")
     else:
       if not self.isClient:
         self.s3.upload_file(filename, self.bucket, key)

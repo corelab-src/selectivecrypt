@@ -1,4 +1,4 @@
-# SelecltiveCrypt
+# SelectiveCrypt
 
 ## Introduction
 
@@ -98,7 +98,7 @@ Docker container continues to run and waits for invocation.
 
 - Client-side
 ``` bash
-python client/client.py cryptonets local
+python client/client.py cryptonets he-local
 ```
 
 ### AWS Test
