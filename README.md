@@ -21,19 +21,17 @@ service and the actual S3 service.
 In addition, this includes minimum configurations to operate in an actual AWS
 environment, so please refer to the description below.
 
-## Getting Started
+## Local Test - Getting Started
 
-### Local Test
-
-#### Prerequisites 
+### Prerequisites 
 
 1. conda
 2. docker
 
-#### Prepare local test environment
+### Prepare local test environment
 
 Clone the project.
-Suppose $SELECTIVECRYPT means where the SelectiveCrypt project resides.
+Suppose `$SELECTIVECRYPT` means where the SelectiveCrypt project resides.
 
 ``` bash
 git clone https://github.com/corelab-src/selectivecrypt
@@ -66,6 +64,7 @@ cd pyheal
 pip install .
 ```
 For installation on ARM device, read [pyheal on ARM](#pyheal-on-arm)
+
 For simulating AWS lambda execution locally, we need a lambda docker image.
 Pull lambda docker image.
 ``` bash
@@ -73,7 +72,7 @@ docker pull lambci/lambda:python3.7
 ```
 Since AWS Lambda docker mounts local directory as a working directory (like /tmp
 of Amazon Linux container for AWS Lambda), you need to install required python
-packages on $SELECTIVECRYPT/playground/opt/python directory. 
+packages on `$SELECTIVECRYPT/playground/opt/python` directory. 
 ``` bash 
 cd $SELECTIVECRYPT/playground
 pip install numpy -t opt/python
@@ -81,14 +80,14 @@ cd /path/to/pyheal/
 pip install . -t $SELECTIVECRYPT/playground/opt/python
 ```
 
-#### Compile (local test)
+### Compile (local test)
 
 ``` bash
 make cryptonets_local
 ```
-This will produce cryptonets_local_transformed.py in $SELECTIVECRYPT/playground.
+This will produce `cryptonets_local_transformed.py` in `$SELECTIVECRYPT/playground`.
 
-#### Run (local test)
+### Run (local test)
 
 - Server-side
 ``` bash
@@ -102,29 +101,29 @@ Docker container continues to run and waits for invocation.
 python client/client.py cryptonets he-local
 ```
 
-### AWS Test
+## AWS Test - Getting Started
 
-#### Participants
+### Participants
 
 We use AWS as the cloud, x86 server and Odroid (AArch64) as proxies and
-Raspberry Pi as a client device. The proxy is for cryptographic task offloading
+Raspberry Pi (armv7l) as a client device. The proxy is for cryptographic task offloading
 (optional).
 
 * Cloud: AWS
 * [Proxy: x86 server | Odroid]
 * Client: Raspberry Pi
 
-#### AWS Configuration
+### AWS Configuration
 Suppose you are configuring in the AWS Management Console.  Of course, you can
 configure using AWS CLI, SDK, CloudFormation, SAM, or Terraform.
 Easy configuration with Terraform or SAM is now in progress.
 
-##### Client Initialization
+#### Client Initialization
 You need credentials to access AWS service. In IAM dashboard, create individual
 an IAM user rather than root access key. With provided access key ID and access
 key, run 'aws configure' on client (and proxy) and set them accordingly.
 
-##### Lambda
+#### Lambda
 1. Lambda > Functions, click 'Create function'.
 2. For Function name, enter <your_lambda_name>.
 3. Choose 'Python 3.7' as runtime
@@ -137,7 +136,7 @@ key, run 'aws configure' on client (and proxy) and set them accordingly.
 For more detailed information, read
 https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html
 
-##### IoT
+#### IoT
 In order to make your device or proxy cooperate with AWS services, uou need AWS
 IoT Python SDK (not v2. we use v1) 
 Read
@@ -162,7 +161,7 @@ IoT-related actions)
   ]
 }</code></pre>
 
-Properly set $SELECTIVECRYPT/playground/awsiot.---.config.json
+Properly set `$SELECTIVECRYPT/playground/awsiot.---.config.json`
 you can find "endpoint" at your Things dashboard. 
 * AWS IoT -> Manage -> Things -> (your thing) -> Interact, See HTTPS section
 Set key paths for certificates. (rootCA, cert, key)
@@ -187,8 +186,8 @@ Choose 'AWS IoT', with 'Custom IoT Rule' and select a rule you just made
 
 Set roles..
 
-##### S3
-Make your own bucket. In my case, it is 'selcrypt'.
+#### S3
+Make your own bucket. In my case, it is `selcrypt`.
 Read https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html
 
 #### Prepare your lambda and lambda layer
@@ -196,8 +195,8 @@ The python packages that <your_lambda_name> depends on should be compressed as
 zip and uploaded to the lambda layer.
 Read https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 
-If you already installed 'pyheal' on $SELECTIVECRYPT/playground/opt/python,
-you just need zip 'python' directory.
+If you already installed 'pyheal' on `$SELECTIVECRYPT/playground/opt/python`,
+you just need zip `python`directory.
 ```bash
 cd $SELECTIVECRYPT/playground/opt
 zip -r pyheal.zip .
@@ -206,28 +205,57 @@ zip -r pyheal.zip .
 make cryptonets
 make zip_cryptonets
 ```
-You will see $SELECTIVECRYPT/build/crtyptonets.zip
+You will see `$SELECTIVECRYPT/build/crtyptonets.zip`
 Now you manually upload the zipped file on your lambda. (Lambda > Functions >
 <your_lambda_name>, In Function code box, click 'actions' dropbox menu and
 select 'Upload a .zip file')
+
+### Run a test - HE on device without proxy (he-d)
+
+On the client device (In my case, Raspberry Pi 3B+),
+``` bash
+cd $SELECTIVECRYPT
+python client/client.py cryptonets he-d
+```
+
+### Run a test - HE with powerful proxy (he-pp)
+
+On the proxy device (In my case, x86 machine equipped with AMD Ryzen 9 16-Core Processor).
+``` bash
+cd $SELECTIVECRYPT
+python proxy/proxy.py
+```
+
+On the client device, properly set IP address of proxy in `client/client.py`
+``` bash
+vim client/client.py
+# modify IP address of proxy device
+python client/client.py cryptonets he-pp
+```
 
 ## pyheal on ARM
 
 On an ARM device, current pyheal version build will fail.
 You need some modifications. (on commit id `1bb697b`)
+(Build confirmed on Raspberry Pi 3B+ [armv7l])
+
 ``` bash
 git clone --recursive https://github.com/Accenture/pyheal.git
 cd pyheal
 ```
 Modify these files as follows,
 * `seal/src/seal/encryptionparams.h`: comment *FastPRNGFactory* related code (line no. 267~272)
-* `pyheal/wrapper.py`: comment *class FastPRNG*, *class FastPRNGFactory* definitionsi (line no. 1177~1201)
+* `pyheal/wrapper.py`: comment *class FastPRNG*, *class FastPRNGFactory* definitions (line no. 1177~1201)
 * `seal_wrapper/wrapper.cpp`: 
   * comment *.def("set_random_generator", ...)* (line no. 556~560)
   * comment *py::class_<FastPRNG, ...> ...* (line no. 847~862)
 
 ``` bash
 pip install .
+```
+Test if pyheal is installed correctly.
+``` bash
+python -c "import pyheal"
 ```
 
 ## Troubleshooting
@@ -243,8 +271,8 @@ docker build -f Dockerfile.buildpyheal -t buildpyheal .
 docker run -it -v $(pwd)/tmp:/root/out buildpyheal /bin/bash
 ```
 
-You will see the files in $SELECTIVECRYPT/bin/tmp/.
-Copy all the generated files to $SELECTIVECRYPT/playground/opt/python
+You will see the files in `$SELECTIVECRYPT/bin/tmp/`.
+Copy all the generated files to `$SELECTIVECRYPT/playground/opt/python`
 ``` bash
 cp -r $SELECTIVECRYPT/bin/tmp/* $SELECTIVECRYPT/playground/opt/python/
 ```

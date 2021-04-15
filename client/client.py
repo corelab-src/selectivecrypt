@@ -7,6 +7,14 @@ from pyheal import wrapper
 import utils.network as net
 import utils.cryptfile as cryptfile
 import utils.awsiot as awsiot
+
+logger = logging.getLogger("CLIENT")
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(CustomFormatter())
+logger.addHandler(ch)
+
 from benchmarks.cryptonets_client import *
 from benchmarks.linear_regression_client import *
 
@@ -88,12 +96,6 @@ Execution Time Evaluation (w/ proxy)
   - cloud comp - Tx (proxy)
 * Cloud computation time
 """
-logger = logging.getLogger("CLIENT")
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-ch.setFormatter(CustomFormatter())
-logger.addHandler(ch)
 
 # helper function
 # Proxy Offload Mode: client (IoT Device) sends plaintext to proxy 
@@ -148,7 +150,7 @@ def main(argv):
     sys.exit()
   BENCHMARK = argv[1]
   EVAL_MODE = argv[2] 
-  logger.debug(f"Evaluate [{BENCHMARK}] with [{EVAL_MODE}] mode.")
+  logger.debug(f"[Perf] Evaluate [{BENCHMARK}] with [{EVAL_MODE}] mode.")
   benchmark_wrapper(BENCHMARK, EVAL_MODE, total_start)
 
 if __name__ == "__main__":

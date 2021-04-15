@@ -14,6 +14,8 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ENC_MODE="enc" # "enc" or "noenc"
 
+logger = logging.getLogger("CLIENT")
+
 # global vars.
 s3 = S3(isClient=True, isLocal=False)
 global tx_start
