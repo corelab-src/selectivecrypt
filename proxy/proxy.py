@@ -4,10 +4,6 @@ from utils.common import *
 import utils.network as net
 import utils.cryptfile as cryptfile
 import utils.awsiot as awsiot
-import benchmarks.cryptonets_client as cryptonets_client
-from benchmarks.linear_regression_client import *
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 logger = logging.getLogger("PROXY")
 logger.setLevel(logging.DEBUG)
@@ -15,6 +11,11 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(CustomFormatter())
 logger.addHandler(ch)
+
+import benchmarks.cryptonets_client as cryptonets_client
+from benchmarks.linear_regression_client import *
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 global proxy 
 global proxyworker 
@@ -32,8 +33,8 @@ def proxyworker_callback(client, userdata, message):
   arrival_time = time.time()
   proxy_tx_diff = arrival_time - proxy_tx_start
   proxy_total_diff = arrival_time - proxy_total_start
-  logger.info(f"Received a new message (from awsiot): {message.payload.decode()}")
   logger.info(f"from topic: {message.topic}")
+  logger.debug(f"[Perf] Received a new message (from awsiot): {message.payload.decode()}")
   logger.debug(f"[Perf] Tx time {proxy_tx_diff*1000} ms")
   logger.debug(f"[Perf] Total time {proxy_total_diff*1000} ms")
 

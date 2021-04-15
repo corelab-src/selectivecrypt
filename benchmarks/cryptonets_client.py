@@ -15,6 +15,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENC_MODE="enc" # "enc" or "noenc"
 
 logger = logging.getLogger("CLIENT")
+proxy_logger = logging.getLogger("PROXY")
 
 # global vars.
 s3 = S3(isClient=True, isLocal=False)
@@ -30,6 +31,7 @@ ready_to_go = False
 
 # Run on client (he-d, se-d modes only)
 # This callback prints performance results from the lambda
+# This callback will be called on the client
 def cryptonets_callback(client, userdata, message):
   # Download results
   #s3.download_file('selcrypt', 'all_outputs.zip', 'data/all_outputs.zip')
@@ -39,8 +41,10 @@ def cryptonets_callback(client, userdata, message):
   global total_start
   arrival_time = time.time()
   total_diff = arrival_time - total_start
-  logger.info("Received a new message (from awsiot): {message.payload.decode()}")
-  logger.info("from topic: {message.topic}")
+  logger.info("from topic: ")
+  print(message.topic)
+  logger.debug("[Perf] Received a new message (from awsiot): ")
+  print(message.payload.decode())
   tx_diff = arrival_time - tx_start
   logger.debug(f"[Perf] Tx time {tx_diff*1000} ms")
   logger.debug(f"[Perf] Total time {total_diff*1000} ms")
@@ -149,10 +153,10 @@ def cryptonets_transmit_inputs_no_offload(destdir):
 # Run on proxy
 def cryptonets_inputs_offloaded(target_data, mode, he):
   destdir = os.path.dirname(target_data)
-  logger.info("Unzipping {}...".format(target_data))
+  proxy_logger.info("Unzipping {}...".format(target_data))
   os.system("unzip -o -q {} -d {}".format(target_data, destdir))
   x1 = 15
-  logger.info("Generating pseudo-weights for Conv 1 ...\n")
+  proxy_logger.info("Generating pseudo-weights for Conv 1 ...\n")
   p_conv_len = 5*25
   p_conv_vec = []
   for i in range(p_conv_len):
@@ -167,7 +171,7 @@ def cryptonets_inputs_offloaded(target_data, mode, he):
       c_conv_vec.append(int(fi.read()))
   c_conv_vec = he.encryptor_encoder.encode(c_conv_vec)
   
-  logger.info("Generating pseudo-weights for Pool ...\n")
+  proxy_logger.info("Generating pseudo-weights for Pool ...\n")
   p_pool_len = 100*5*x1
   p_pool_vec = []
   for i in range(p_pool_len):
@@ -175,7 +179,7 @@ def cryptonets_inputs_offloaded(target_data, mode, he):
       p_pool_vec.append(int(fi.read()))
   p_pool_vec = he.plaintext_encoder.encode(p_pool_vec)
 
-  logger.info("Generating pseudo-weights for FC ...\n")
+  proxy_logger.info("Generating pseudo-weights for FC ...\n")
   p_fc_len = 10*100
   p_fc_vec = []
   for i in range(p_fc_len):
@@ -183,7 +187,7 @@ def cryptonets_inputs_offloaded(target_data, mode, he):
       p_fc_vec.append(int(fi.read()))
   p_fc_vec = he.plaintext_encoder.encode(p_fc_vec)
 
-  logger.info("...pseudo-weights for Conv 1, Pool and FC complete\n")
+  proxy_logger.info("...pseudo-weights for Conv 1, Pool and FC complete\n")
   for i in range(0, p_conv_len):
     p_conv_vec[i].save(os.path.join(ROOT_DIR,destdir, "p_conv_vec." + str(i) + ".in"))
   for i in range(0, c_conv_len):
@@ -201,29 +205,29 @@ def cryptonets_prepare_inputs_offloaded(target_data, mode, cf, he):
     enc_start = time.time()
     cf.encrypt_file_with_he(destdir, 'playground/input_data/video_small.mp4', he)
     #cf.encrypt_file_with_he(destdir, 'playground/input_data/image_tiny.png', he)
-    logger.info("[Proxy] Zipping encrypted video_small.mp4 as a name video_small.mp4")
+    proxy_logger.info("Zipping encrypted video_small.mp4 as a name video_small.mp4")
     os.system('cd {} && zip -q -r video_small.mp4 video_small.mp4.*.enc && rm video_small.mp4.*.enc && cd -'.format(destdir))
   elif mode[:2] == 'se':
     aes_start = time.time()
     cf.encrypt_file(destdir, 'playground/input_data/video_small.mp4')
     aes_diff = time.time() - aes_start
-    logger.debug(f"[Proxy][Perf] AES Encrypt: done in {aes_diff*1000} ms")
+    proxy_logger.debug(f"[Perf] AES Encrypt: done in {aes_diff*1000} ms")
     enc_start = time.time()
   else:
-    logger.error("[Proxy] Wrong mode")
+    proxy_logger.error("[Proxy] Wrong mode")
     sys.exit()
   
   cryptonets_inputs_offloaded(target_data, mode, he)
   
   enc_diff = time.time() - enc_start
-  logger.debug(f"[Proxy][Perf] HE Encrypt and Save: done in {enc_diff*1000} ms")
+  proxy_logger.debug(f"[Perf] HE Encrypt and Save: done in {enc_diff*1000} ms")
   
 # Run on proxy
 def cryptonets_transmit_inputs_offloaded(destdir):
   # Zip all and send them at once
-  logger.info("[Proxy] Zipping all the prepared inputs as all_inputs.zip")
+  proxy_logger.info("Zipping all the prepared inputs as all_inputs.zip")
   os.system("cd {} && zip -q -r all_inputs.zip . && cd -".format(destdir))
-  logger.info("[Proxy] Transmit all_inputs.zip to aws iot")
+  proxy_logger.info("Transmit all_inputs.zip to aws iot")
   s3.upload_file('{}/all_inputs.zip'.format(destdir), 'selcrypt', 'all_inputs.zip')
   
 # Run on client
@@ -322,7 +326,7 @@ def cryptonets_local(mode, _total_start):
   he = ph(poly_modulus, coeff_modulus, plain_modulus)
   he.saveParmsAndKeys("data/"); # data/seal.parms, data/pub.key
   diff = time.time() - start
-  logger.debug(f"HE Init: done in {diff*1000} ms")
+  logger.debug(f"[Client-local] HE Init: done in {diff*1000} ms")
 
   cf = cryptfile.CryptFile()
   cf.set_key_with_psk('MYPASSWORDFORFILECRYPT')
