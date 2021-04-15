@@ -1,5 +1,6 @@
 import sys, os, time
 sys.path.append(os.path.dirname(sys.path[0]))
+from utils.common import *
 import utils.network as net
 import utils.cryptfile as cryptfile
 import utils.awsiot as awsiot
@@ -8,15 +9,12 @@ from benchmarks.linear_regression_client import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-class bcolors:
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
-  ENDC = '\033[0m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
+logger = logging.getLogger("PROXY")
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(CustomFormatter())
+logger.addHandler(ch)
 
 global proxy 
 global proxyworker 
@@ -34,12 +32,10 @@ def proxyworker_callback(client, userdata, message):
   arrival_time = time.time()
   proxy_tx_diff = arrival_time - proxy_tx_start
   proxy_total_diff = arrival_time - proxy_total_start
-  print("[Proxy] Received a new message (from awsiot): ")
-  print(message.payload.decode())
-  print("[Proxy] from topic: ")
-  print(message.topic)
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Proxy] Tx time {proxy_tx_diff*1000} ms{bcolors.ENDC}")
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Proxy] Total time {proxy_total_diff*1000} ms{bcolors.ENDC}")
+  logger.info(f"Received a new message (from awsiot): {message.payload.decode()}")
+  logger.info(f"from topic: {message.topic}")
+  logger.debug(f"[Perf] Tx time {proxy_tx_diff*1000} ms")
+  logger.debug(f"[Perf] Total time {proxy_total_diff*1000} ms")
 
   # send to client
   proxy.send_cmd("proxy_return", "", "")
@@ -58,15 +54,15 @@ class ProxyWorker():
     self.he = ph(poly_modulus, coeff_modulus, plain_modulus)
     self.he.saveParmsAndKeys(os.path.join(ROOT_DIR,"data_proxy/")); # data/seal.parms, data/pub.key
     init_diff = time.time() - init_start
-    print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Proxy] HE Init: done in {init_diff*1000} ms{bcolors.ENDC}")
+    logger.debug(f"[Perf] HE Init: done in {init_diff*1000} ms")
   
     self.cf = cryptfile.CryptFile()
     self.cf.set_key_with_psk('MYPASSWORDFORFILECRYPT')
 
 def cmd_crypto_offload(target_data, mode):
-  print("[Proxy] cmd_crypto_offload called.")
-  print("[Proxy] target_data: {}".format(target_data))
-  print("[Proxy] mode: {}".format(mode))
+  logger.info(f"cmd_crypto_offload called.")
+  logger.info(f"target_data: {target_data}")
+  logger.info(f"mode: {mode}")
  
   destdir = os.path.dirname(target_data)
 
@@ -77,7 +73,7 @@ def cmd_crypto_offload(target_data, mode):
   proxy_tx_start = time.time()
   cryptonets_client.cryptonets_transmit_inputs_offloaded(destdir)
   
-  print("[Proxy] Invoke lambda ...")
+  logger.info(f"Invoke lambda ...")
   #os.system('./invoke.sh')
   message = {}
   message['app'] = 'cryptonets'
@@ -95,7 +91,7 @@ def main(argv):
   global proxy
   proxy = net.Proxy(8080, "MYPASSWORD")
   proxy.set_cmd_callback("crypto_offload", cmd_crypto_offload)
-  print("[Proxy] Run")
+  logger.info("Run Proxy")
   proxy.run()
   
   global proxyworker

@@ -1,6 +1,7 @@
 import sys, os, time
 import json
 sys.path.append(os.path.dirname(sys.path[0]))
+from utils.common import *
 from utils.mypyheal import MyPyHeal as ph
 from pyheal import wrapper
 import utils.network as net
@@ -87,15 +88,12 @@ Execution Time Evaluation (w/ proxy)
   - cloud comp - Tx (proxy)
 * Cloud computation time
 """
-class bcolors:
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
-  ENDC = '\033[0m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
+logger = logging.getLogger("CLIENT")
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(CustomFormatter())
+logger.addHandler(ch)
 
 # helper function
 # Proxy Offload Mode: client (IoT Device) sends plaintext to proxy 
@@ -130,7 +128,7 @@ def benchmark_wrapper(benchmark, mode, total_start):
     elif benchmark == 'linear_regression':
       linear_regression_no_offload(mode, client_for_awsiot, total_start)
   else:
-    print("[Client] Offload to proxy")
+    logger.info("Offload to proxy")
     # 0. connect to proxy
     # 1. send inputs to proxy as plaintexts
     # 2. wait returns from proxy
@@ -145,12 +143,12 @@ def benchmark_wrapper(benchmark, mode, total_start):
 def main(argv):
   total_start = time.time()
   if len(argv) != 3:
-    print(f"{bcolors.BOLD}{bcolors.WARNING}[Client] Usage:{bcolors.ENDC}")
-    print(f"{bcolors.BOLD}{bcolors.WARNING}[Client] python client.py [benchmark] [eval_mode]{bcolors.ENDC}")
+    logger.warning(f"Usage:")
+    logger.warning(f"python client.py [benchmark] [eval_mode]")
     sys.exit()
   BENCHMARK = argv[1]
   EVAL_MODE = argv[2] 
-  print(f"{bcolors.BOLD}{bcolors.OKBLUE}[Client] Evaluate {BENCHMARK} with {EVAL_MODE} mode.{bcolors.ENDC}")
+  logger.debug(f"Evaluate [{BENCHMARK}] with [{EVAL_MODE}] mode.")
   benchmark_wrapper(BENCHMARK, EVAL_MODE, total_start)
 
 if __name__ == "__main__":

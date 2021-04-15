@@ -1,6 +1,6 @@
 import os, sys, json, random, time
 sys.path.append(os.path.dirname(sys.path[0]))
-
+from utils.common import *
 from utils.mypyheal import MyPyHeal as ph
 from pyheal import wrapper
 #from pyheal import encoders
@@ -11,16 +11,6 @@ import utils.awsiot as awsiot
 import numpy as np
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-class bcolors:
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
-  ENDC = '\033[0m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
 
 ENC_MODE="enc" # "enc" or "noenc"
 
@@ -47,19 +37,17 @@ def cryptonets_callback(client, userdata, message):
   global total_start
   arrival_time = time.time()
   total_diff = arrival_time - total_start
-  print("[Client] Received a new message (from awsiot): ")
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}" + message.payload.decode() + f"{bcolors.ENDC}")
-  print("[Client] from topic: ")
-  print(message.topic)
+  logger.info("Received a new message (from awsiot): {message.payload.decode()}")
+  logger.info("from topic: {message.topic}")
   tx_diff = arrival_time - tx_start
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] Tx time {tx_diff*1000} ms{bcolors.ENDC}")
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] Total time {total_diff*1000} ms{bcolors.ENDC}")
-  print("--------------\n")
+  logger.debug(f"[Perf] Tx time {tx_diff*1000} ms")
+  logger.debug(f"[Perf] Total time {total_diff*1000} ms")
+  print("-------------------------------------------------\n")
 
 # Run on client (he-wp, he-pp, se-wp, se-pp modes only)
 def cmd_proxy_ready(arg, mode):
   #global client_for_proxy
-  print("[Client] Got a ready signal")
+  logger.info("Got a ready signal")
   global ready_to_go
   ready_to_go = True
 
@@ -69,20 +57,20 @@ def cmd_proxy_return(arg, mode):
   #s3.download_file('selcrypt', 'all_outputs.zip', 'data/all_outputs.zip')
   s3.download_and_extract('selcrypt', 'all_outputs.zip', 'data/all_outputs.zip')
 
-  print("[Client] Got a return from proxy")
+  logger.info("Got a return from proxy")
   global tx_start
   global total_start
   arrival_time = time.time()
   total_diff = arrival_time - total_start
   tx_diff = arrival_time - tx_start
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] Tx time {tx_diff*1000} ms{bcolors.ENDC}")
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] Total time {total_diff*1000} ms{bcolors.ENDC}")
-  print("--------------\n")
+  logger.debug(f"[Perf] Tx time {tx_diff*1000} ms")
+  logger.debug(f"[Perf] Total time {total_diff*1000} ms")
+  print("-------------------------------------------------\n")
 
 # Run on client
 def cryptonets_inputs(destdir, enc_mode, he=None):
   x1 = 15
-  print("Generating pseudo-weights for Conv 1 ...\n")
+  logger.info("Generating pseudo-weights for Conv 1 ...\n")
   p_conv_len = 5*25
   p_conv_vec = [5 for _ in range(0, p_conv_len)]
   if enc_mode == "enc":
@@ -93,19 +81,19 @@ def cryptonets_inputs(destdir, enc_mode, he=None):
   if enc_mode == "enc":
     c_conv_vec = he.encryptor_encoder.encode(c_conv_vec)
   
-  print("Generating pseudo-weights for Pool ...\n")
+  logger.info("Generating pseudo-weights for Pool ...\n")
   p_pool_len = 100*5*x1
   p_pool_vec = [6 for _ in range(0, p_pool_len)]
   if enc_mode == "enc":
     p_pool_vec = he.plaintext_encoder.encode(p_pool_vec)
 
-  print("Generating pseudo-weights for FC ...\n")
+  logger.info("Generating pseudo-weights for FC ...\n")
   p_fc_len = 10*100
   p_fc_vec = [9 for _ in range(0, p_fc_len)]
   if enc_mode == "enc":
     p_fc_vec = he.plaintext_encoder.encode(p_fc_vec)
 
-  print("...pseudo-weights for Conv 1, Pool and FC complete\n")
+  logger.info("...pseudo-weights for Conv 1, Pool and FC complete\n")
   for i in range(0, p_conv_len):
     if enc_mode == "noenc":
       np.savetxt(os.path.join(destdir, "p_conv_vec." + str(i) + ".in"), [p_conv_vec[i]], fmt='%i')
@@ -134,22 +122,22 @@ def cryptonets_prepare_inputs_no_offload(destdir, mode, cf, he):
     enc_start = time.time()
     cf.encrypt_file_with_he(destdir, 'playground/input_data/video_small.mp4', he)
     #cf.encrypt_file_with_he(destdir, 'playground/input_data/image_tiny.png', he)
-    print("[Client] Zipping encrypted video_small.mp4 as a name video_small.mp4")
+    logger.info("Zipping encrypted video_small.mp4 as a name video_small.mp4")
     os.system('cd {} && zip -q -r video_small.mp4 video_small.mp4.*.enc && rm video_small.mp4.*.enc && cd -'.format(destdir))
   elif mode[:2] == 'se':
     aes_start = time.time()
     cf.encrypt_file(destdir, 'playground/input_data/video_small.mp4')
     aes_diff = time.time() - aes_start
-    print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] AES Encrypt: done in {aes_diff*1000} ms{bcolors.ENDC}")
+    logger.debug(f"[Perf] AES Encrypt: done in {aes_diff*1000} ms")
     enc_start = time.time()
   else:
-    print("[Client] Wrong mode")
+    logger.error("Wrong mode")
     sys.exit()
   
   cryptonets_inputs(destdir, "enc", he)
   
   enc_diff = time.time() - enc_start
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] HE Encrypt and Save: done in {enc_diff*1000} ms{bcolors.ENDC}")
+  logger.debug(f"[Perf] HE Encrypt and Save: done in {enc_diff*1000} ms")
 
 def cryptonets_transmit_inputs_no_offload(destdir):
   # Zip all and send them at once
@@ -159,10 +147,10 @@ def cryptonets_transmit_inputs_no_offload(destdir):
 # Run on proxy
 def cryptonets_inputs_offloaded(target_data, mode, he):
   destdir = os.path.dirname(target_data)
-  print("[Proxy] Unzipping {}...".format(target_data))
+  logger.info("Unzipping {}...".format(target_data))
   os.system("unzip -o -q {} -d {}".format(target_data, destdir))
   x1 = 15
-  print("Generating pseudo-weights for Conv 1 ...\n")
+  logger.info("Generating pseudo-weights for Conv 1 ...\n")
   p_conv_len = 5*25
   p_conv_vec = []
   for i in range(p_conv_len):
@@ -177,7 +165,7 @@ def cryptonets_inputs_offloaded(target_data, mode, he):
       c_conv_vec.append(int(fi.read()))
   c_conv_vec = he.encryptor_encoder.encode(c_conv_vec)
   
-  print("Generating pseudo-weights for Pool ...\n")
+  logger.info("Generating pseudo-weights for Pool ...\n")
   p_pool_len = 100*5*x1
   p_pool_vec = []
   for i in range(p_pool_len):
@@ -185,7 +173,7 @@ def cryptonets_inputs_offloaded(target_data, mode, he):
       p_pool_vec.append(int(fi.read()))
   p_pool_vec = he.plaintext_encoder.encode(p_pool_vec)
 
-  print("Generating pseudo-weights for FC ...\n")
+  logger.info("Generating pseudo-weights for FC ...\n")
   p_fc_len = 10*100
   p_fc_vec = []
   for i in range(p_fc_len):
@@ -193,7 +181,7 @@ def cryptonets_inputs_offloaded(target_data, mode, he):
       p_fc_vec.append(int(fi.read()))
   p_fc_vec = he.plaintext_encoder.encode(p_fc_vec)
 
-  print("...pseudo-weights for Conv 1, Pool and FC complete\n")
+  logger.info("...pseudo-weights for Conv 1, Pool and FC complete\n")
   for i in range(0, p_conv_len):
     p_conv_vec[i].save(os.path.join(ROOT_DIR,destdir, "p_conv_vec." + str(i) + ".in"))
   for i in range(0, c_conv_len):
@@ -211,29 +199,29 @@ def cryptonets_prepare_inputs_offloaded(target_data, mode, cf, he):
     enc_start = time.time()
     cf.encrypt_file_with_he(destdir, 'playground/input_data/video_small.mp4', he)
     #cf.encrypt_file_with_he(destdir, 'playground/input_data/image_tiny.png', he)
-    print("[Proxy] Zipping encrypted video_small.mp4 as a name video_small.mp4")
+    logger.info("[Proxy] Zipping encrypted video_small.mp4 as a name video_small.mp4")
     os.system('cd {} && zip -q -r video_small.mp4 video_small.mp4.*.enc && rm video_small.mp4.*.enc && cd -'.format(destdir))
   elif mode[:2] == 'se':
     aes_start = time.time()
     cf.encrypt_file(destdir, 'playground/input_data/video_small.mp4')
     aes_diff = time.time() - aes_start
-    print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Proxy] AES Encrypt: done in {aes_diff*1000} ms{bcolors.ENDC}")
+    logger.debug(f"[Proxy][Perf] AES Encrypt: done in {aes_diff*1000} ms")
     enc_start = time.time()
   else:
-    print("[Proxy] Wrong mode")
+    logger.error("[Proxy] Wrong mode")
     sys.exit()
   
   cryptonets_inputs_offloaded(target_data, mode, he)
   
   enc_diff = time.time() - enc_start
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Proxy] HE Encrypt and Save: done in {enc_diff*1000} ms{bcolors.ENDC}")
+  logger.debug(f"[Proxy][Perf] HE Encrypt and Save: done in {enc_diff*1000} ms")
   
 # Run on proxy
 def cryptonets_transmit_inputs_offloaded(destdir):
   # Zip all and send them at once
-  print("[Proxy] Zipping all the prepared inputs as all_inputs.zip")
+  logger.info("[Proxy] Zipping all the prepared inputs as all_inputs.zip")
   os.system("cd {} && zip -q -r all_inputs.zip . && cd -".format(destdir))
-  print("[Proxy] Transmit all_inputs.zip to aws iot")
+  logger.info("[Proxy] Transmit all_inputs.zip to aws iot")
   s3.upload_file('{}/all_inputs.zip'.format(destdir), 'selcrypt', 'all_inputs.zip')
   
 # Run on client
@@ -242,13 +230,13 @@ def cryptonets_transmit_plain_inputs_offload(srcdir, proxy_destdir, mode, client
   cryptonets_inputs(srcdir, "noenc")
 
   # Zip all 
-  print("[Client] Zipping all the plain inputs for offloading")
+  logger.info("Zipping all the plain inputs for offloading")
   os.system('cd {} && zip -q -r all_plain_inputs.zip . && cd -'.format(srcdir))
   
   global tx_start
   tx_start = time.time()
   # transmit inputs
-  print("[Client] Transmit all_plain_inputs.zip to proxy")
+  logger.info("Transmit all_plain_inputs.zip to proxy")
   client_for_proxy.send_file(proxy_destdir, os.path.join(srcdir,"all_plain_inputs.zip"))
   #client_for_proxy.send_file(destdir, os.path.join(destdir,"p_pool_vec.1.in"))
 
@@ -266,7 +254,7 @@ def cryptonets_no_offload(mode, client_for_awsiot, _total_start):
   he = ph(poly_modulus, coeff_modulus, plain_modulus)
   he.saveParmsAndKeys("data/"); # data/seal.parms, data/pub.key
   diff = time.time() - start
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] HE Init: done in {diff*1000} ms{bcolors.ENDC}")
+  logger.debug(f"[Perf] HE Init: done in {diff*1000} ms")
 
   cf = cryptfile.CryptFile()
   cf.set_key_with_psk('MYPASSWORDFORFILECRYPT')
@@ -278,7 +266,7 @@ def cryptonets_no_offload(mode, client_for_awsiot, _total_start):
 
   cryptonets_transmit_inputs_no_offload('data') 
 
-  print("[Client] Invoke lambda ...")
+  logger.info("Invoke lambda ...")
   #os.system('./invoke.sh')
   message = {}
   message['app'] = 'cryptonets'
@@ -332,7 +320,7 @@ def cryptonets_local(mode, _total_start):
   he = ph(poly_modulus, coeff_modulus, plain_modulus)
   he.saveParmsAndKeys("data/"); # data/seal.parms, data/pub.key
   diff = time.time() - start
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client] HE Init: done in {diff*1000} ms{bcolors.ENDC}")
+  logger.debug(f"HE Init: done in {diff*1000} ms")
 
   cf = cryptfile.CryptFile()
   cf.set_key_with_psk('MYPASSWORDFORFILECRYPT')
@@ -343,23 +331,23 @@ def cryptonets_local(mode, _total_start):
     enc_start = time.time()
     cf.encrypt_file_with_he(destdir, 'playground/input_data/video_small.mp4', he)
     #cf.encrypt_file_with_he(destdir, 'playground/input_data/image_tiny.png', he)
-    print("[Client-Local] Zipping encrypted video_small.mp4 as a name video_small.mp4")
+    logger.info("[Client-Local] Zipping encrypted video_small.mp4 as a name video_small.mp4")
     os.system('cd {} && zip -q -r video_small.mp4 video_small.mp4.*.enc && rm video_small.mp4.*.enc && cd -'.format(destdir))
   elif mode[:2] == 'se':
     aes_start = time.time()
     cf.encrypt_file(destdir, 'playground/input_data/video_small.mp4')
     aes_diff = time.time() - aes_start
-    print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client-Local] AES Encrypt: done in {aes_diff*1000} ms{bcolors.ENDC}")
+    logger.debug(f"[Client-Local][Perf] AES Encrypt: done in {aes_diff*1000} ms")
     enc_start = time.time()
   else:
-    print("[Client-Local] Wrong mode")
+    logger.error("[Client-Local] Wrong mode")
     sys.exit()
   
   cryptonets_inputs(destdir, "enc", he)
   
   enc_diff = time.time() - enc_start
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}@ [Client-Local] HE Encrypt and Save: done in {enc_diff*1000} ms{bcolors.ENDC}")
+  logger.debug(f"[Client-Local][Perf] HE Encrypt and Save: done in {enc_diff*1000} ms")
 
-  print(f"{bcolors.BOLD}{bcolors.OKGREEN}[Client-local] Invoke lambda ...{bcolors.ENDC}")
+  logger.info(f"[Client-local] Invoke lambda ...")
   os.system('playground/invoke.sh')
   

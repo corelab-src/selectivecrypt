@@ -57,7 +57,7 @@ source activate <name>
 Install required python packages.
 ``` bash
 cd $SELECTIVECRYPT
-pip install -t requiremetns.txt
+pip install -r requiremetns.txt
 ```
 Install PyHeal manually.
 ``` bash
@@ -65,6 +65,7 @@ git clone --recursive https://github.com/Accenture/pyheal.git
 cd pyheal
 pip install .
 ```
+For installation on ARM device, read [pyheal on ARM](#pyheal-on-arm)
 For simulating AWS lambda execution locally, we need a lambda docker image.
 Pull lambda docker image.
 ``` bash
@@ -166,11 +167,11 @@ you can find "endpoint" at your Things dashboard.
 * AWS IoT -> Manage -> Things -> (your thing) -> Interact, See HTTPS section
 Set key paths for certificates. (rootCA, cert, key)
 For generality, We unified the names of device certificate and keys
-as cert.pem and privkey.pem.
+as `rootCA.crt`, `cert.pem` and `privkey.pem`.
 
-'pub_topic' is a topic where your client or proxy publishes an MQTT message to
+`pub_topic` is a topic where your client or proxy publishes an MQTT message to
 invoke <your_lambda_name>.
-'sub_topic' is a topic where your client or proxy subscribes an MQTT message for
+`sub_topic` is a topic where your client or proxy subscribes an MQTT message for
 waiting results from <your_lambda_name>.
 
 In AWS console,
@@ -210,9 +211,28 @@ Now you manually upload the zipped file on your lambda. (Lambda > Functions >
 <your_lambda_name>, In Function code box, click 'actions' dropbox menu and
 select 'Upload a .zip file')
 
-#### Troubleshooting
+## pyheal on ARM
 
-## GLIBC 2.29 not found
+On an ARM device, current pyheal version build will fail.
+You need some modifications. (on commit id `1bb697b`)
+``` bash
+git clone --recursive https://github.com/Accenture/pyheal.git
+cd pyheal
+```
+Modify these files as follows,
+* `seal/src/seal/encryptionparams.h`: comment *FastPRNGFactory* related code (line no. 267~272)
+* `pyheal/wrapper.py`: comment *class FastPRNG*, *class FastPRNGFactory* definitionsi (line no. 1177~1201)
+* `seal_wrapper/wrapper.cpp`: 
+  * comment *.def("set_random_generator", ...)* (line no. 556~560)
+  * comment *py::class_<FastPRNG, ...> ...* (line no. 847~862)
+
+``` bash
+pip install .
+```
+
+## Troubleshooting
+
+### GLIBC 2.29 not found
 
 Build pyheal on lower version of linux. (e.g. Ubuntu 18.04 LTS)
 
@@ -229,7 +249,7 @@ Copy all the generated files to $SELECTIVECRYPT/playground/opt/python
 cp -r $SELECTIVECRYPT/bin/tmp/* $SELECTIVECRYPT/playground/opt/python/
 ```
 
-## When building pyheal, encounter 'virtual memory exhausted..' error
+### When building pyheal, encounter 'virtual memory exhausted..' error
 
 Your device does not have enough memory to build.
 See https://stackoverflow.com/questions/29466663/memory-error-while-using-pip-install-matplotlib
